@@ -1,0 +1,7 @@
+[package]
+name = "guilty_as_yara"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+

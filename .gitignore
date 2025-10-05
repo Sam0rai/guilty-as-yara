@@ -1,0 +1,17 @@
+# === Rust build artifacts ===
+/target/
+
+# === Rust backup files ===
+**/*.rs.bk
+
+# === Logs and temp files ===
+*.log
+*.tmp
+
+# === OS-generated files ===
+.DS_Store
+Thumbs.db
+
+# === VS Code settings (optional) ===
+.vscode/
+*.code-workspace
