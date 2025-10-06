@@ -523,7 +523,7 @@ impl PEFileBuilder {
     }
 
     fn generate_safe_hex_pattern_bytes(&mut self) {
-        // Add the safe main function at the beginning
+        // Add main function that does nothing and exits safely
         self.add_safe_main_function();
 
         // Add the hex patterns in never-called functions
@@ -539,10 +539,7 @@ impl PEFileBuilder {
             self.data_section_content.extend_from_slice(&safe_bytes);
             
             println!("    Added safe pattern ({} bytes)", safe_bytes.len());
-        }
-        
-        // Add main function that does nothing and exits safely
-        self.add_safe_main_function();
+        }        
     }
 
     fn add_safe_main_function(&mut self) {
