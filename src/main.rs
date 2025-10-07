@@ -215,20 +215,37 @@ struct HexPattern {
 
 impl HexPattern {
     fn parse(pattern: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let cleaned = pattern.trim().trim_matches('{').trim_matches('}').trim();
-        let mut bytes = Vec::new();
+        let cleaned = pattern
+            .trim()
+            .trim_start_matches('{')
+            .trim_end_matches('}')
+            .trim();
         
-        for part in cleaned.split_whitespace() {
+        let mut bytes = Vec::new();
+        let mut parts = cleaned.split_whitespace().peekable();
+        
+        while let Some(part) = parts.next() {
             if part == "??" {
-                bytes.push(None); // Wildcard byte
+                // Single wildcard byte
+                bytes.push(None);
+            } else if part.starts_with('[') && part.ends_with(']') {
+                // Handle [N] syntax for multiple wildcards
+                if let Ok(count) = part.trim_matches('[').trim_matches(']').parse::<usize>() {
+                    for _ in 0..count {
+                        bytes.push(None);
+                    }
+                } else {
+                    return Err(format!("Invalid wildcard count: '{}'", part).into());
+                }
             } else if part.len() == 2 {
+                // Regular hex byte
                 if let Ok(byte) = u8::from_str_radix(part, 16) {
                     bytes.push(Some(byte));
                 } else {
-                    bytes.push(None); // Treat invalid hex as wildcard
+                    return Err(format!("Invalid hex byte: '{}'", part).into());
                 }
             } else {
-                return Err(format!("Invalid hex pattern part: '{}'", part).into());
+                return Err(format!("Invalid pattern part: '{}'", part).into());
             }
         }
         
@@ -634,5 +651,30 @@ rule TestRule2 {
         assert_eq!(rules[1].strings.len(), 1);
         
         std::fs::remove_file("test_rules.yar").unwrap();
+    }
+
+    #[test]
+    fn test_wildcard_syntax() {
+        let pattern = "{E3 A0 00 0B E5 9F 11 EB [3] E3 A0 00 0D E5 9F 11 EB}";
+        let hex_pattern = HexPattern::parse(pattern).unwrap();
+        
+        println!("Original pattern: {}", pattern);
+        println!("Parsed bytes count: {}", hex_pattern.bytes.len());
+        println!("Fixed bytes: {}", hex_pattern.bytes.iter().filter(|b| b.is_some()).count());
+        println!("Wildcard bytes: {}", hex_pattern.bytes.iter().filter(|b| b.is_none()).count());
+        
+        let safe_bytes = hex_pattern.generate_safe_bytes();
+        println!("Generated safe bytes: {:02X?}", safe_bytes);
+        
+        // Verify the structure:
+        // Should have: 8 fixed bytes + 3 wildcards + 8 fixed bytes = 19 total bytes
+        assert_eq!(hex_pattern.bytes.len(), 19);
+        assert_eq!(hex_pattern.bytes.iter().filter(|b| b.is_some()).count(), 16);
+        assert_eq!(hex_pattern.bytes.iter().filter(|b| b.is_none()).count(), 3);
+        
+        // Verify the positions of wildcards (should be at indices 8, 9, 10)
+        assert!(hex_pattern.bytes[8].is_none());
+        assert!(hex_pattern.bytes[9].is_none());
+        assert!(hex_pattern.bytes[10].is_none());
     }
 }
