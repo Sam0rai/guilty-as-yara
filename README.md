@@ -1,4 +1,6 @@
 # Guilty-As-Yara
+💡In a nutshell: Think about it as an EICAR creating tool - only for Yara rules!
+
 A Rust-based tool that generates Windows PE executables containing data patterns designed to trigger YARA rule matches. This is invaluable for validating YARA rules and ensuring your malware detection signatures work as expected.
 
 
@@ -65,8 +67,8 @@ rule ExampleMalware {
 
 ## 🔧 Key Technical Components
 1. **YARA Rule Parser (YaraRuleParser)**<br>
-Multi-line hex pattern handling: Correctly parses hex sequences spanning multiple lines.
-* State machine parsing: Tracks rule sections (strings, condition) and nested patterns.
+* Multi-line hex pattern handling: Correctly parses hex sequences spanning multiple lines.
+* State machine parsing: Tracks rule sections (strings [ASCII and Wide], condition) and nested patterns.
 * Robust error handling: Continues parsing even with minor syntax variations.
 <br><br>
    
